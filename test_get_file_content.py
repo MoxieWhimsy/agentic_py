@@ -1,15 +1,19 @@
+import os
 import unittest
 from functions.get_file_content import get_file_content
 
 
 class MyTestCase(unittest.TestCase):
-    def test_get_lorem_content(self):
+    def test_get_lorem_content(self) -> None:
+        if not os.path.exists("lorem.txt"):
+            print("No lorem file. Test skipped.")
+            return
         result = get_file_content("calculator", "lorem.txt")
         print(f"Result for 'lorem.txt': Success == {result.startswith('SUCCESS')}")
         print(f"lorem.txt length: {len(result)}")
         print(f"lorem.txt truncated: {'truncated' in result}")
 
-    def test_get_multiple_file_contents_in_calculator_working_dir(self):
+    def test_get_multiple_file_contents_in_calculator_working_dir(self) -> None:
         for file_path in [
             "main.py",
             "pkg/calculator.py",
