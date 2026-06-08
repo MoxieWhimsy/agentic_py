@@ -1,0 +1,1 @@
+max_read_file_characters = 10000
