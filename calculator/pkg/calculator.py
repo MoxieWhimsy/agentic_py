@@ -6,16 +6,16 @@ from collections.abc import Callable
 class Calculator:
     def __init__(self) -> None:
         self.operators: dict[str, Callable[[float, float], float]] = {
-            "+": lambda a, b: a + b,
-            "-": lambda a, b: a - b,
-            "*": lambda a, b: a * b,
-            "/": lambda a, b: a / b,
+            '+': lambda a, b: a + b,
+            '-': lambda a, b: a - b,
+            '*': lambda a, b: a * b,
+            '/': lambda a, b: a / b,
         }
         self.precedence: dict[str, int] = {
-            "+": 1,
-            "-": 1,
-            "*": 2,
-            "/": 2,
+            '+': 1,
+            '-': 1,
+            '*': 2,
+            '/': 2,
         }
 
     def evaluate(self, expression: str) -> float | None:
