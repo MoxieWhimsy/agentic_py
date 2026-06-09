@@ -1,6 +1,5 @@
 import os
 import subprocess
-from idlelib.run import capture_warnings
 
 
 def run_python_file(
@@ -48,3 +47,15 @@ def run_python_file(
         return f"Error: executing Python file: {e}"
 
 
+schema_run_python_file = {
+    "name": "run_python_file",
+    "description": "Run the specified Python (.py) file in a specified directory relative to the working directory. Works with or without arguments.",
+    "arguments": {
+        "file_path": str,
+        "args": list[str] | None
+    },
+    "required": ["file_path"],
+    "optional": {
+        "args": str,
+    },
+}

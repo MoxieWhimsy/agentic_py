@@ -1,10 +1,10 @@
 BracesDict = dict[str, str ]
-BracketDict = dict[str, str | BracesDict]
+BracketDict = dict[str, str | BracesDict | None]
 
-def parse_braces_dict(text: str) -> BracesDict | str:
+def parse_braces_dict(text: str) -> BracesDict | None:
     print(text)
     if not text.startswith("{"):
-        return text
+        return None
     result: BracesDict = {}
     is_open_braces = False
     is_in_quotes = False
