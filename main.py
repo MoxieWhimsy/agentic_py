@@ -1,7 +1,6 @@
 import argparse
 import os
 from dotenv import load_dotenv
-from google.genai import types
 import lmstudio as lms
 
 from call_function import available_functions_prompt, FunctionCall, call_function, FunctionResponse
@@ -22,30 +21,16 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
-    messages: list[types.Content] = [
-        types.Content(role="user", parts=[types.Part(text=args.user_prompt)]),
-    ]
-
-    config: lms.LlmPredictionConfig = lms.LlmPredictionConfig()
-
     chat: lms.Chat = lms.Chat(initial_prompt=system_prompt+"\n"+available_functions_prompt)
     chat.add_user_message(args.user_prompt)
 
     model = lms.llm("mistralai/devstral-small-2-2512")
-
-    prompt = args.user_prompt
 
     # models.generate_content
     result = model.respond(chat)
 
     if result is None or result.stats is None:
         raise RuntimeError("model response failed")
-
-    output = f"User prompt: {prompt}\n" \
-          f"Prompt tokens: {result.stats.prompt_tokens_count}\n" \
-          f"Response tokens: {result.stats.predicted_tokens_count}\n" if args.verbose else ""
-
-
 
     if 'function_call' in result.content:
         first_start = result.content.find('function_call')
@@ -71,9 +56,11 @@ def main():
         if args.verbose:
             print(f"-> {function_call_result.parts[0].response}")
 
+    output = f"User prompt: {args.user_prompt}\n" \
+          f"Prompt tokens: {result.stats.prompt_tokens_count}\n" \
+          f"Response tokens: {result.stats.predicted_tokens_count}\n" if args.verbose else ""
 
 
-    # model.respond result uses .content property instead of .text property
     output += f"Response:\n{result.content}"
     print(output)
 
