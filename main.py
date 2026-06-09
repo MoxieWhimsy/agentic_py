@@ -1,5 +1,7 @@
 import argparse
+import json
 import os
+
 from dotenv import load_dotenv
 import lmstudio as lms
 
@@ -13,19 +15,7 @@ api_key = os.environ.get("LM_API_TOKEN")
 if api_key is None:
     raise RuntimeError("api key not loaded")
 
-
-def main():
-
-    parser = argparse.ArgumentParser(description="Chatbot")
-    parser.add_argument("user_prompt", type=str, help="user_prompt")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
-    args = parser.parse_args()
-
-    chat: lms.Chat = lms.Chat(initial_prompt=system_prompt+"\n"+available_functions_prompt)
-    chat.add_user_message(args.user_prompt)
-
-    model = lms.llm("mistralai/devstral-small-2-2512")
-
+def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list, verbose: bool) -> lms.PredictionResult:
     # models.generate_content
     result = model.respond(chat)
 
@@ -37,8 +27,8 @@ def main():
         start = result.content.find('"', first_start)+1
         name = result.content[start:result.content.find('"', start)]
         start = result.content.find("{")
-        arguments = parse_braces_dict(result.content[start:result.content.find("}")+1])
-        function_call_result = call_function(FunctionCall(name, arguments), args.verbose)
+        arguments = parse_braces_dict(result.content[start:result.content.find("}")+1], verbose)
+        function_call_result = call_function(FunctionCall(name, arguments), verbose)
         if function_call_result.parts is None or 0 == len(function_call_result.parts):
             raise Exception("function call result has no parts")
 
@@ -49,20 +39,50 @@ def main():
         if function_response.response is None:
             raise Exception("function call result has no response")
 
-        function_results = [
-            function_response.response,
-        ]
+        response_as_json = json.dumps(function_response.response, ensure_ascii=False)
 
-        if args.verbose:
+        function_results.append(function_response.response["result"])
+
+        chat.add_tool_result(lms.ToolCallResultData(
+            content=response_as_json,
+            tool_call_id=None,
+        ))
+
+        if verbose:
             print(f"-> {function_call_result.parts[0].response}")
+    return result
 
-    output = f"User prompt: {args.user_prompt}\n" \
-          f"Prompt tokens: {result.stats.prompt_tokens_count}\n" \
-          f"Response tokens: {result.stats.predicted_tokens_count}\n" if args.verbose else ""
+def main():
+    
+    parser = argparse.ArgumentParser(description="Chatbot")
+    parser.add_argument("user_prompt", type=str, help="user_prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    args = parser.parse_args()
 
+    chat: lms.Chat = lms.Chat(initial_prompt=system_prompt+"\n"+available_functions_prompt)
+    chat.add_user_message(args.user_prompt)
 
-    output += f"Response:\n{result.content}"
-    print(output)
+    model = lms.llm("qwen/qwen3.6-27b")
+
+    tool_results: list = []
+
+    if args.verbose:
+        print(f"User prompt: {args.user_prompt}")
+
+    for _ in range(5):
+        result = do_one_response_round(chat, model, tool_results, args.verbose)
+        if args.verbose:
+            print(f"Response: {result.content}\n"
+                  f"Prompt tokens: {result.stats.prompt_tokens_count}\n"
+                  f"Response tokens: {result.stats.predicted_tokens_count}\n")
+
+        if not 'function_call' in result.content:
+            print(result.content)
+            if args.verbose:
+                print(f"Tool Results:\n{'\n'.join(tool_results)}")
+            exit(0)
+    exit(1)
+
 
 
 if __name__ == "__main__":
