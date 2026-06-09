@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from google.genai import types
 import lmstudio as lms
 
+from prompts import system_prompt
+
 load_dotenv()
 api_key = os.environ.get("LM_API_TOKEN")
 
@@ -22,12 +24,15 @@ def main():
         types.Content(role="user", parts=[types.Part(text=args.user_prompt)]),
     ]
 
+    chat: lms.Chat = lms.Chat(initial_prompt=system_prompt)
+    chat.add_user_message(args.user_prompt)
+
     model = lms.llm("mistralai/devstral-small-2-2512")
 
     prompt = args.user_prompt
 
     # models.generate_content
-    result = model.respond(prompt)
+    result = model.respond(chat)
 
 
     if result is None or result.stats is None:
