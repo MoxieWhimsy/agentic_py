@@ -68,7 +68,12 @@ def call_function(
     if not (function_name in function_map):
         return Content(
             role="tool",
-            parts=[{"error": f"Unknown function: {function_name}"},]
+            parts=[
+                FunctionResponse(
+                    name=function_name,
+                    response={"error": f"Unknown function name: {function_name}"},
+                ),
+            ],
         )
 
     args = dict(function_call.args) if function_call.args else {}
@@ -77,21 +82,40 @@ def call_function(
     if schema is None:
         return Content(
             role="tool",
-            parts=[{"error": f"Unknown schema on function: {function_name}"}, ]
+            parts=[
+                FunctionResponse(
+                    name=function_name,
+                    response={"error": f"Unknown schema on function: {function_name}"},
+                ),
+            ],
         )
 
+    missing_arguments = []
     for required_arg in schema["required"]:
         if required_arg not in args:
-            return Content(
-                role="tool",
-                parts=[{"error": f"Missing required argument: {required_arg}"}, ]
-            )
+            missing_arguments.append(required_arg)
+
+    if missing_arguments:
+        return Content(
+            role="tool",
+            parts=[
+                FunctionResponse(
+                    name=function_name,
+                    response={"error": f"Missing required argument(s): {missing_arguments}"},
+                ),
+            ]
+        )
 
     for check_arg in args:
         if check_arg not in schema["arguments"]:
             return Content(
                 role="tool",
-                parts=[{"error": f"Unexpected argument found while calling {function_name}: {check_arg}"}, ]
+                parts=[
+                    FunctionResponse(
+                        name=function_name,
+                        response={"error": f"Unexpected argument found while calling {function_name}: {check_arg}"},
+                    ),
+                ]
             )
 
 

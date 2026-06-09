@@ -17,31 +17,34 @@ if api_key is None:
 
 def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list, verbose: bool) -> lms.PredictionResult:
     # models.generate_content
-    result = model.respond(chat)
+    model_response = model.respond(chat)
 
-    if result is None or result.stats is None:
+    if model_response is None or model_response.stats is None:
         raise RuntimeError("model response failed")
 
-    if 'function_call' in result.content:
-        first_start = result.content.find('function_call')
-        start = result.content.find('"', first_start)+1
-        name = result.content[start:result.content.find('"', start)]
-        start = result.content.find("{")
-        arguments = parse_braces_dict(result.content[start:result.content.find("}")+1])
+    if verbose:
+        print(f"Response: {model_response.content}\n"
+              f"Prompt tokens: {model_response.stats.prompt_tokens_count}\n"
+              f"Response tokens: {model_response.stats.predicted_tokens_count}\n")
+
+    if 'function_call' in model_response.content:
+        first_start = model_response.content.find('function_call')
+        start = model_response.content.find('"', first_start)+1
+        name = model_response.content[start:model_response.content.find('"', start)]
+        start = model_response.content.find("{")
+        arguments = parse_braces_dict(model_response.content[start:model_response.content.find("}")+1])
         function_call_result = call_function(FunctionCall(name, arguments), verbose)
         if function_call_result.parts is None or 0 == len(function_call_result.parts):
             raise Exception("function call result has no parts")
 
-        function_response = function_call_result.parts[0]
+        function_response = function_call_result.parts[0].response
         if function_response is None:
             raise Exception("function call result has no response")
 
-        if function_response.response is None:
-            raise Exception("function call result has no response")
+        response_as_json = json.dumps(function_response, ensure_ascii=False)
 
-        response_as_json = json.dumps(function_response.response, ensure_ascii=False)
-
-        function_results.append(function_response.response["result"])
+        error = function_response["error"] if "error" in function_response else ""
+        result = function_response["result"] if "result" in function_response else ""
 
         chat.add_tool_result(lms.ToolCallResultData(
             content=response_as_json,
@@ -49,8 +52,8 @@ def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list
         ))
 
         if verbose:
-            print(f"-> {function_call_result.parts[0].response}")
-    return result
+            print(f"-> {result}{('\nError: ' + error) if error else ''}")
+    return model_response
 
 def main():
     
@@ -69,17 +72,11 @@ def main():
     if args.verbose:
         print(f"User prompt: {args.user_prompt}")
 
-    for _ in range(5):
+    for _ in range(8):
         result = do_one_response_round(chat, model, tool_results, args.verbose)
-        if args.verbose:
-            print(f"Response: {result.content}\n"
-                  f"Prompt tokens: {result.stats.prompt_tokens_count}\n"
-                  f"Response tokens: {result.stats.predicted_tokens_count}\n")
 
         if not 'function_call' in result.content:
             print(result.content)
-            if args.verbose:
-                print(f"Tool Results:\n{'\n'.join(tool_results)}")
             exit(0)
     exit(1)
 
