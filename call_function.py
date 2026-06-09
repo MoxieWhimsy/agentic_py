@@ -49,6 +49,13 @@ class Content:
         self.role = role
         self.parts = parts
 
+def get_schema(function_name: str) -> dict | None:
+    for schema in available_functions:
+        if function_name != schema["name"]:
+            continue
+        return schema
+    return None
+
 def call_function(
     function_call: FunctionCall, verbose: bool = False
 ) -> Content:
@@ -65,6 +72,29 @@ def call_function(
         )
 
     args = dict(function_call.args) if function_call.args else {}
+
+    schema = get_schema(function_name)
+    if schema is None:
+        return Content(
+            role="tool",
+            parts=[{"error": f"Unknown schema on function: {function_name}"}, ]
+        )
+
+    for required_arg in schema["required"]:
+        if required_arg not in args:
+            return Content(
+                role="tool",
+                parts=[{"error": f"Missing required argument: {required_arg}"}, ]
+            )
+
+    for check_arg in args:
+        if check_arg not in schema["arguments"]:
+            return Content(
+                role="tool",
+                parts=[{"error": f"Unexpected argument found while calling {function_name}: {check_arg}"}, ]
+            )
+
+
     args["working_directory"] = "./calculator"
 
     function_result = function_map[function_call.name](**args)
