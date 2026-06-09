@@ -49,7 +49,7 @@ def run_python_file(
 
 schema_run_python_file = {
     "name": "run_python_file",
-    "description": "Run the specified Python (.py) file in a specified directory relative to the working directory. Works with or without arguments. This is the function that runs python files",
+    "description": "Runs the specified Python file. Works with or without arguments. This is the function that runs python files",
     "arguments": {
         "file_path": str,
         "args": list[str] | None

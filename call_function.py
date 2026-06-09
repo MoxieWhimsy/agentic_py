@@ -6,10 +6,10 @@ from functions.run_python_file import schema_run_python_file, run_python_file
 from functions.write_file import schema_write_file, write_file
 
 available_functions: list[dict] = [
-    schema_run_python_file,
     schema_get_file_content,
-    schema_write_file,
     schema_get_files_info,
+    schema_run_python_file,
+    schema_write_file,
 ]
 
 function_map: dict[str, Callable[..., str]] = {
