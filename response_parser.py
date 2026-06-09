@@ -4,8 +4,10 @@ BracketDict = dict[str, str | BracesDict | None]
 def parse_braces_dict(text: str, debug: bool = False) -> BracesDict | None:
     if debug:
         print(text)
-    if not text.startswith("{"):
+    if not text.startswith("{") and not text.endswith("}"):
+        print(f"Warning: braces not closed")
         return None
+    text = text[1:-1]
     result: BracesDict = {}
     is_open_braces = False
     is_in_quotes = False
@@ -29,14 +31,8 @@ def parse_braces_dict(text: str, debug: bool = False) -> BracesDict | None:
             is_escaped = False
             continue
         match character:
-            case "{":
-                is_open_braces = True
-            case "}":
-                is_open_braces = False
-                break
             case ":":
                 is_before_colon = False
-                is_after_colon = True
             case ",":
                 if len(key) > 0:
                     result[key] = value
@@ -60,9 +56,6 @@ def parse_braces_dict(text: str, debug: bool = False) -> BracesDict | None:
 
     if len(key) > 0:
         result[key] = value
-
-    if is_open_braces:
-        print(f"Warning: braces not closed")
 
     if debug:
         for key in result:
