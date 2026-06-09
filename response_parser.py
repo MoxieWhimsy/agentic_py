@@ -9,7 +9,6 @@ def parse_braces_dict(text: str, debug: bool = False) -> BracesDict | None:
         return None
     text = text[1:-1]
     result: BracesDict = {}
-    is_open_braces = False
     is_in_quotes = False
     is_in_single_quotes = False
     is_escaped = False
@@ -32,8 +31,14 @@ def parse_braces_dict(text: str, debug: bool = False) -> BracesDict | None:
             continue
         match character:
             case ":":
+                if is_in_quotes or is_in_single_quotes:
+                    key, value = accumulate(key, value, character)
+                    continue
                 is_before_colon = False
             case ",":
+                if is_in_quotes or is_in_single_quotes:
+                    key, value = accumulate(key, value, character)
+                    continue
                 if len(key) > 0:
                     result[key] = value
                 is_before_colon = True
