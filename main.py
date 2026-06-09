@@ -5,6 +5,7 @@ from google.genai import types
 import lmstudio as lms
 
 from prompts import system_prompt
+from response_parser import parse_braces_dict
 
 load_dotenv()
 api_key = os.environ.get("LM_API_TOKEN")
@@ -34,14 +35,23 @@ def main():
     # models.generate_content
     result = model.respond(chat)
 
-
     if result is None or result.stats is None:
         raise RuntimeError("model response failed")
-
 
     output = f"User prompt: {prompt}\n" \
           f"Prompt tokens: {result.stats.prompt_tokens_count}\n" \
           f"Response tokens: {result.stats.predicted_tokens_count}\n" if args.verbose else ""
+
+
+
+    if 'function_call' in result.content:
+        first_start = result.content.find('function_call:')
+        start = result.content.find('"', first_start)+1
+        name = result.content[start:result.content.find('"', start)]
+        start = result.content.find("{")
+        arguments = parse_braces_dict(result.content[start:result.content.find("}")+1])
+        print(f"Calling function: {name}({arguments})\n)")
+
 
     # model.respond result uses .content property instead of .text property
     output += f"Response:\n{result.content}"
