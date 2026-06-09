@@ -1,8 +1,8 @@
 BracesDict = dict[str, str ]
 BracketDict = dict[str, str | BracesDict | None]
 
-def parse_braces_dict(text: str, verbose: bool) -> BracesDict | None:
-    if verbose:
+def parse_braces_dict(text: str, debug: bool = False) -> BracesDict | None:
+    if debug:
         print(text)
     if not text.startswith("{"):
         return None
@@ -64,7 +64,7 @@ def parse_braces_dict(text: str, verbose: bool) -> BracesDict | None:
     if is_open_braces:
         print(f"Warning: braces not closed")
 
-    if verbose:
+    if debug:
         for key in result:
             print(f"{key}: {result[key]}")
 

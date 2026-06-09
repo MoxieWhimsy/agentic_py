@@ -27,7 +27,7 @@ def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list
         start = result.content.find('"', first_start)+1
         name = result.content[start:result.content.find('"', start)]
         start = result.content.find("{")
-        arguments = parse_braces_dict(result.content[start:result.content.find("}")+1], verbose)
+        arguments = parse_braces_dict(result.content[start:result.content.find("}")+1])
         function_call_result = call_function(FunctionCall(name, arguments), verbose)
         if function_call_result.parts is None or 0 == len(function_call_result.parts):
             raise Exception("function call result has no parts")
