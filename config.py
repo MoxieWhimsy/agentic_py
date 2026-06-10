@@ -1,1 +1,3 @@
-max_read_file_characters = 10000
+MAX_READ_FILE_CHARACTERS = 10000
+MAIN_MODEL = "qwen/qwen3.6-27b"
+MAX_RESPONSE_ROUNDS = 8

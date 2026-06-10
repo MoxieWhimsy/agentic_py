@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import lmstudio as lms
 
 from call_function import available_functions_prompt, FunctionCall, call_function, function_call_format_reminder_prompt
+from config import MAIN_MODEL, MAX_RESPONSE_ROUNDS
 from prompts import system_prompt
 from response_parser import get_within_curly_braces
 
@@ -77,14 +78,14 @@ def main():
     chat: lms.Chat = lms.Chat(initial_prompt=system_prompt+"\n"+available_functions_prompt)
     chat.add_user_message(args.user_prompt)
 
-    model = lms.llm("qwen/qwen3.6-27b")
+    model = lms.llm(MAIN_MODEL)
 
     tool_results: list = []
 
     if args.verbose:
         print(f"User prompt: {args.user_prompt}")
 
-    for _ in range(8):
+    for _ in range(MAX_RESPONSE_ROUNDS):
         result = do_one_response_round(chat, model, tool_results, args.verbose)
 
         if not 'function_call' in result.content:
