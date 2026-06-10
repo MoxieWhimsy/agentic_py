@@ -53,7 +53,7 @@ def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list
         ))
 
         if verbose:
-            print(f"-> {result}{('\nError: ' + error) if error else ''}")
+            print(f"-> {f'Error: {error}' if error else result}")
     elif '[function_call]' in model_response.content:
         chat.add_tool_result(lms.ToolCallResultData(
             content=json.dumps({"reminder": function_call_format_reminder_prompt}, ensure_ascii=False),
