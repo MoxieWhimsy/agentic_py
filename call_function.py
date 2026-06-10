@@ -22,7 +22,17 @@ function_map: dict[str, Callable[..., str]] = {
 available_functions_prompt = """
 function calls begin with the literal [function_call] followed by the name of the function in quotes followed by any arguments in curly braces. 
 function call format:
-[function_call] "<function name>" {<arguments as key-value pairs (e.g 'arg1': 'value1', 'arg2': 'value2')>}
+!!!function_call
+{
+    "name": "function_name",
+    "args": {
+        "argument_name_one": "argument_value_one",
+        "argument_name_two": "argument_value_two",
+        "argument_name_three": "argument_value_three",
+        <etc. arguments as key-value pairs>,
+    }
+}
+!!!
     
 """ + f'{len(available_functions)} available functions:\n{",\n".join(map(str,available_functions))}'
 

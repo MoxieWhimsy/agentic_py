@@ -20,7 +20,7 @@ def get_file_content(working_directory: str, file_path: str) -> str:
                 content += f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
             f.close()
 
-            return f'SUCCESS!\n{content}'
+            return f'The content of {file_path} follows:\n{content}'
 
     except Exception as e:
         return f'Error: {e}'

@@ -7,7 +7,7 @@ import lmstudio as lms
 
 from call_function import available_functions_prompt, FunctionCall, call_function, FunctionResponse
 from prompts import system_prompt
-from response_parser import parse_braces_dict
+from response_parser import parse_braces_dict, get_within_curly_braces
 
 load_dotenv()
 api_key = os.environ.get("LM_API_TOKEN")
@@ -27,12 +27,14 @@ def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list
               f"Prompt tokens: {model_response.stats.prompt_tokens_count}\n"
               f"Response tokens: {model_response.stats.predicted_tokens_count}\n")
 
-    if 'function_call' in model_response.content:
+    if '!function_call' in model_response.content:
         first_start = model_response.content.find('function_call')
-        start = model_response.content.find('"', first_start)+1
-        name = model_response.content[start:model_response.content.find('"', start)]
-        start = model_response.content.find("{")
-        arguments = parse_braces_dict(model_response.content[start:model_response.content.find("}")+1])
+        start = model_response.content.find('{', first_start)
+        fc_data = get_within_curly_braces(model_response.content[start:])
+        fc_json = json.loads(fc_data)
+
+        name: str = fc_json['name'] if 'name' in fc_json else ""
+        arguments: dict = fc_json['args'] if 'args' in fc_json else {}
         function_call_result = call_function(FunctionCall(name, arguments), verbose)
         if function_call_result.parts is None or 0 == len(function_call_result.parts):
             raise Exception("function call result has no parts")

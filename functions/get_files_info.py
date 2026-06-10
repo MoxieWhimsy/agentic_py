@@ -14,7 +14,7 @@ def get_files_info(working_directory: str, directory: str = ".") -> str:
         if not os.path.isdir(target_dir):
             return f'Error: "{directory}" is not a directory'
 
-        result = f'Success: "{directory}" is within the working directory'
+        result = f'Listing contents of "{directory}"'
         dir_list = os.listdir(target_dir)
         for short_path in dir_list:
             full_path = os.path.join(target_dir, short_path)
