@@ -5,10 +5,9 @@ import os
 from dotenv import load_dotenv
 import lmstudio as lms
 
-from call_function import available_functions_prompt, FunctionCall, call_function, FunctionResponse, \
-    function_call_format_reminder_prompt
+from call_function import available_functions_prompt, FunctionCall, call_function, function_call_format_reminder_prompt
 from prompts import system_prompt
-from response_parser import parse_braces_dict, get_within_curly_braces
+from response_parser import get_within_curly_braces
 
 load_dotenv()
 api_key = os.environ.get("LM_API_TOKEN")
@@ -17,7 +16,6 @@ if api_key is None:
     raise RuntimeError("api key not loaded")
 
 def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list, verbose: bool) -> lms.PredictionResult:
-    # models.generate_content
     model_response = model.respond(chat)
 
     if model_response is None or model_response.stats is None:
