@@ -5,7 +5,8 @@ import os
 from dotenv import load_dotenv
 import lmstudio as lms
 
-from call_function import available_functions_prompt, FunctionCall, call_function, FunctionResponse
+from call_function import available_functions_prompt, FunctionCall, call_function, FunctionResponse, \
+    function_call_format_reminder_prompt
 from prompts import system_prompt
 from response_parser import parse_braces_dict, get_within_curly_braces
 
@@ -27,8 +28,8 @@ def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list
               f"Prompt tokens: {model_response.stats.prompt_tokens_count}\n"
               f"Response tokens: {model_response.stats.predicted_tokens_count}\n")
 
-    if '!function_call' in model_response.content:
-        first_start = model_response.content.find('function_call')
+    if '!!!function_call' in model_response.content:
+        first_start = model_response.content.find('!!!function_call')
         start = model_response.content.find('{', first_start)
         fc_data = get_within_curly_braces(model_response.content[start:])
         fc_json = json.loads(fc_data)
@@ -55,6 +56,17 @@ def do_one_response_round(chat: lms.Chat, model: lms.LLM, function_results: list
 
         if verbose:
             print(f"-> {result}{('\nError: ' + error) if error else ''}")
+    elif '[function_call]' in model_response.content:
+        chat.add_tool_result(lms.ToolCallResultData(
+            content=json.dumps({"reminder": function_call_format_reminder_prompt}, ensure_ascii=False),
+            tool_call_id=None,
+        ))
+        if verbose:
+            print("Added the following reminder to chat:")
+            print(function_call_format_reminder_prompt)
+        else:
+            print("Function call format reminder")
+
     return model_response
 
 def main():

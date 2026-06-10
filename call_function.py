@@ -36,6 +36,21 @@ function call format:
     
 """ + f'{len(available_functions)} available functions:\n{",\n".join(map(str,available_functions))}'
 
+function_call_format_reminder_prompt = """
+function call format:
+!!!function_call
+{
+    "name": "function_name",
+    "args": {
+        "argument_name_one": "argument_value_one",
+        "argument_name_two": "argument_value_two",
+        "argument_name_three": "argument_value_three",
+        <etc. arguments as key-value pairs>,
+    }
+}
+!!!
+"""
+
 class FunctionCall:
     name: str
     args: dict | None
